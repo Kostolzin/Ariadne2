@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { LabyrinthMark } from "./components/LabyrinthMark";
 import { ChatColumn } from "./components/ChatColumn";
 import { ItineraryColumn } from "./components/ItineraryColumn";
+import { LoginPage } from "./components/LoginPage";
+import { RegisterPage } from "./components/RegisterPage";
 import { useAriadne } from "./hooks/useAriadne";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 
@@ -33,9 +36,45 @@ function deriveHeadline(workflow: string | undefined): {
   }
 }
 
+type AuthView = "login" | "register";
+
 export function App() {
   const mobile = useMediaQuery("(max-width: 820px)");
-  const ariadne = useAriadne();
+  const [authedUser, setAuthedUser] = useState<string | null>(null);
+  const [authView, setAuthView] = useState<AuthView>("login");
+
+  if (!authedUser) {
+    if (authView === "register") {
+      return <RegisterPage onSwitchToLogin={() => setAuthView("login")} />;
+    }
+    return (
+      <LoginPage
+        onLogin={(username) => setAuthedUser(username)}
+        onSwitchToRegister={() => setAuthView("register")}
+      />
+    );
+  }
+
+  return (
+    <AuthedApp
+      mobile={mobile}
+      username={authedUser}
+      onSignOut={() => {
+        setAuthedUser(null);
+        setAuthView("login");
+      }}
+    />
+  );
+}
+
+interface AuthedAppProps {
+  mobile: boolean;
+  username: string;
+  onSignOut: () => void;
+}
+
+function AuthedApp({ mobile, username, onSignOut }: AuthedAppProps) {
+  const ariadne = useAriadne({ name: username });
 
   const { caseTitle, caseSubtitle } = deriveHeadline(
     ariadne.state.lastDecision?.workflow,
@@ -53,7 +92,11 @@ export function App() {
         overflow: "hidden",
       }}
     >
-      <TopBar mobile={mobile} userName={ariadne.state.user.name} />
+      <TopBar
+        mobile={mobile}
+        userName={ariadne.state.user.name}
+        onSignOut={onSignOut}
+      />
 
       {ariadne.state.pendingError && (
         <div
@@ -111,9 +154,10 @@ export function App() {
 interface TopBarProps {
   mobile: boolean;
   userName: string;
+  onSignOut: () => void;
 }
 
-function TopBar({ mobile, userName }: TopBarProps) {
+function TopBar({ mobile, userName, onSignOut }: TopBarProps) {
   return (
     <div
       style={{
@@ -142,6 +186,21 @@ function TopBar({ mobile, userName }: TopBarProps) {
         <span style={{ fontSize: 12, color: "#6a6f78", letterSpacing: 0.3 }}>
           Signed in as {userName}
         </span>
+        <button
+          onClick={onSignOut}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 99,
+            background: "transparent",
+            color: "#1f5d4a",
+            border: "1px solid rgba(31,93,74,0.3)",
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Sign out
+        </button>
         <button
           style={{
             width: 34,
