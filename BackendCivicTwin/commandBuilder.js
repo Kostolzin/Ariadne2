@@ -60,13 +60,14 @@ if (
   addPendingWorkflow(user, "residence_certificate");
 }
 
-  const appointments = getAvailableAppointments(citizenRecord.municipality);
-
   result.citizenRecord = citizenRecord;
   result.requiredSteps = documentCheck.required;
   result.completedSteps = documentCheck.completed;
   result.missingSteps = documentCheck.missing;
-  result.availableAppointments = appointments;
+
+  if (result.workflow === "new_identity_card") {
+    result.availableAppointments = getAvailableAppointments(citizenRecord.municipality);
+  }
 
   const completedText =
     documentCheck.completed.length > 0

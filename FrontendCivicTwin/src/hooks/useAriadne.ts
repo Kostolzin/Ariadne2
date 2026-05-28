@@ -295,12 +295,32 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
     void emitEvent("e_paravolo_issued", {});
   }, [emitEvent]);
 
+  const authenticateWithTaxisnet = useCallback(() => {
+    void emitEvent("taxisnet_authenticated", {});
+  }, [emitEvent]);
+
+  const uploadResidenceProof = useCallback(() => {
+    void emitEvent("residence_proof_uploaded", {});
+  }, [emitEvent]);
+
+  const requestResidenceCertificate = useCallback(() => {
+    void emitEvent("residence_certificate_requested", {});
+  }, [emitEvent]);
+
+  const issueResidenceCertificate = useCallback(() => {
+    void emitEvent("residence_certificate_issued", {});
+  }, [emitEvent]);
+
   return {
     state,
     sendMessage,
     selectAppointment,
     confirmAppointment,
     issueEParavolo,
+    authenticateWithTaxisnet,
+    uploadResidenceProof,
+    requestResidenceCertificate,
+    issueResidenceCertificate,
     emitEvent,
     shareLocation,
   };

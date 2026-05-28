@@ -146,6 +146,10 @@ function AuthedApp({ mobile, username, onSignOut }: AuthedAppProps) {
           isLocating={ariadne.state.isLocating}
           locationError={ariadne.state.locationError}
           onIssueEParavolo={ariadne.issueEParavolo}
+          onAuthenticateWithTaxisnet={ariadne.authenticateWithTaxisnet}
+          onUploadResidenceProof={ariadne.uploadResidenceProof}
+          onRequestResidenceCertificate={ariadne.requestResidenceCertificate}
+          onIssueResidenceCertificate={ariadne.issueResidenceCertificate}
           onSelectAppointment={ariadne.selectAppointment}
           onConfirmAppointment={ariadne.confirmAppointment}
           onShareLocation={ariadne.shareLocation}

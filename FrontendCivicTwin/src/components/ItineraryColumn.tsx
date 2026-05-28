@@ -22,6 +22,10 @@ interface ItineraryColumnProps {
   isLocating: boolean;
   locationError: string | null;
   onIssueEParavolo: () => void;
+  onAuthenticateWithTaxisnet: () => void;
+  onUploadResidenceProof: () => void;
+  onRequestResidenceCertificate: () => void;
+  onIssueResidenceCertificate: () => void;
   onSelectAppointment: (slot: string) => void;
   onConfirmAppointment: () => void;
   onShareLocation: () => void;
@@ -40,6 +44,10 @@ export function ItineraryColumn({
   isLocating,
   locationError,
   onIssueEParavolo,
+  onAuthenticateWithTaxisnet,
+  onUploadResidenceProof,
+  onRequestResidenceCertificate,
+  onIssueResidenceCertificate,
   onSelectAppointment,
   onConfirmAppointment,
   onShareLocation,
@@ -51,6 +59,8 @@ export function ItineraryColumn({
     requiredSteps.includes("e_paravolo") && !completed.has("e_paravolo");
   const shouldOpenEParavolo =
     activeServicePanel === "e_paravolo" || completed.has("appointment");
+  const isIdentityWorkflow = decision?.workflow === "new_identity_card";
+  const isResidenceWorkflow = decision?.workflow === "residence_certificate";
 
   return (
     <section
@@ -89,15 +99,137 @@ export function ItineraryColumn({
         />
       )}
 
-      <AppointmentCard
-        appointments={appointments}
-        selected={selectedAppointment}
-        reserved={reservedAppointment}
-        status={appointmentStatus}
-        onSelect={onSelectAppointment}
-        onConfirm={onConfirmAppointment}
-      />
+      {isResidenceWorkflow && (
+        <ResidenceCertificateCard
+          completed={completed}
+          onAuthenticate={onAuthenticateWithTaxisnet}
+          onUploadProof={onUploadResidenceProof}
+          onRequestCertificate={onRequestResidenceCertificate}
+          onIssueCertificate={onIssueResidenceCertificate}
+        />
+      )}
+
+      {isIdentityWorkflow && (
+        <AppointmentCard
+          appointments={appointments}
+          selected={selectedAppointment}
+          reserved={reservedAppointment}
+          status={appointmentStatus}
+          onSelect={onSelectAppointment}
+          onConfirm={onConfirmAppointment}
+        />
+      )}
     </section>
+  );
+}
+
+interface ResidenceCertificateCardProps {
+  completed: Set<string>;
+  onAuthenticate: () => void;
+  onUploadProof: () => void;
+  onRequestCertificate: () => void;
+  onIssueCertificate: () => void;
+}
+
+function ResidenceCertificateCard({
+  completed,
+  onAuthenticate,
+  onUploadProof,
+  onRequestCertificate,
+  onIssueCertificate,
+}: ResidenceCertificateCardProps) {
+  const taxisnetDone = completed.has("taxisnet_login");
+  const proofDone = completed.has("residence_proof");
+  const requestDone = completed.has("municipality_review");
+  const issued = completed.has("gov_inbox_delivery");
+
+  let title = "Authenticate with Taxisnet";
+  let body = "Start the residence certificate request with your gov.gr credentials.";
+  let buttonText = "Authenticate";
+  let onClick = onAuthenticate;
+
+  if (taxisnetDone && !proofDone) {
+    title = "Attach proof of residence";
+    body = "Upload or confirm your utility bill, lease, or rental contract.";
+    buttonText = "Upload proof";
+    onClick = onUploadProof;
+  } else if (proofDone && !requestDone) {
+    title = "Submit certificate request";
+    body = "Send the request to the municipality for review.";
+    buttonText = "Submit request";
+    onClick = onRequestCertificate;
+  } else if (requestDone && !issued) {
+    title = "Complete municipal review";
+    body = "Simulate the municipality issuing the certificate to your gov.gr inbox.";
+    buttonText = "Issue certificate";
+    onClick = onIssueCertificate;
+  } else if (issued) {
+    title = "Certificate issued";
+    body = "Your residence certificate has been delivered to your gov.gr inbox.";
+    buttonText = "Completed";
+  }
+
+  return (
+    <div
+      style={{
+        background: issued ? "#1f5d4a" : "#fff",
+        color: issued ? "#fbf7ee" : "#1a1f2a",
+        border: "1px solid rgba(31,93,74,0.2)",
+        borderRadius: 14,
+        padding: 16,
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+      }}
+    >
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 10,
+          background: issued ? "rgba(255,255,255,0.12)" : "#eef4ed",
+          color: issued ? "#fbf7ee" : "#1f5d4a",
+          display: "grid",
+          placeItems: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Icon name={issued ? "check" : "shield"} size={20} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <SectionLabel small>Residence certificate</SectionLabel>
+        <div style={{ fontSize: 15, fontWeight: 700, marginTop: 5 }}>
+          {title}
+        </div>
+        <div
+          style={{
+            fontSize: 12.5,
+            color: issued ? "rgba(251,247,238,0.78)" : "#6a6f78",
+            marginTop: 4,
+            lineHeight: 1.4,
+          }}
+        >
+          {body}
+        </div>
+      </div>
+      <button
+        onClick={issued ? undefined : onClick}
+        disabled={issued}
+        style={{
+          background: issued ? "rgba(255,255,255,0.14)" : "#1f5d4a",
+          color: "#fbf7ee",
+          border: "none",
+          borderRadius: 8,
+          padding: "9px 13px",
+          fontSize: 12.5,
+          fontWeight: 700,
+          cursor: issued ? "default" : "pointer",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
   );
 }
 

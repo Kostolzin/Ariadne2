@@ -164,10 +164,9 @@ eventRouter.post("/", async (req, res) => {
     /// TAXISNET AUTHENTICATED
     /// --------------------------------------------------------
     if (eventType === "taxisnet_authenticated") {
-      state = completeStep(user, "taxisnet_login");
       state.activeWorkflow = "residence_certificate";
       state.activeVariant = "standard";
-      state.currentStage = "residence_proof_required";
+      state = completeStep(user, "taxisnet_login");
       state = syncActiveWorkflowSteps(state);
 
       return res.json({
@@ -194,10 +193,9 @@ eventRouter.post("/", async (req, res) => {
     /// RESIDENCE PROOF UPLOADED
     /// --------------------------------------------------------
     if (eventType === "residence_proof_uploaded") {
-      state = completeStep(user, "residence_proof");
       state.activeWorkflow = "residence_certificate";
       state.activeVariant = "standard";
-      state.currentStage = "ready_to_request_certificate";
+      state = completeStep(user, "residence_proof");
       state = syncActiveWorkflowSteps(state);
 
       return res.json({
@@ -224,10 +222,9 @@ eventRouter.post("/", async (req, res) => {
     /// RESIDENCE CERTIFICATE REQUESTED
     /// --------------------------------------------------------
     if (eventType === "residence_certificate_requested") {
-      state = completeStep(user, "municipality_review");
       state.activeWorkflow = "residence_certificate";
       state.activeVariant = "standard";
-      state.currentStage = "municipality_review";
+      state = completeStep(user, "municipality_review");
       state = syncActiveWorkflowSteps(state);
 
       return res.json({
@@ -254,10 +251,9 @@ eventRouter.post("/", async (req, res) => {
     /// RESIDENCE CERTIFICATE ISSUED
     /// --------------------------------------------------------
     if (eventType === "residence_certificate_issued") {
-      state = completeStep(user, "gov_inbox_delivery");
       state.activeWorkflow = "residence_certificate";
       state.activeVariant = "standard";
-      state.currentStage = "certificate_issued";
+      state = completeStep(user, "gov_inbox_delivery");
       state = syncActiveWorkflowSteps(state);
 
       return res.json({

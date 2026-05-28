@@ -41,7 +41,6 @@ export interface AiDecideResponse {
   acceptPendingAction: boolean;
   pendingActionDecision: string;
   relatedWorkflows: string[];
-  mapResult?: NearestOfficeResult;
 
   // Enriched by commandBuilder when no clarification is needed.
   citizenRecord?: CitizenRecord;
