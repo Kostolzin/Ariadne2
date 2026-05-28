@@ -99,9 +99,15 @@ const MAX_TOOL_ITERATIONS = 4;
 app.post("/ai/decide", async (req, res) => {
   try {
     // conversationState allows follow-up clarification handling.
-    const { message, user, conversationState } = req.body;
+    const { message, user, conversationState, userLocation } = req.body;
 
     console.log("User message:", message);
+
+    // Attach the browser-supplied GPS (if any) so the maps tool can pick it
+    // up via `user.location` without changing the function-call signature.
+    const userContext = userLocation
+      ? { ...user, location: userLocation }
+      : user;
 
     const prompt = buildCivicPrompt(
       message,
@@ -152,7 +158,7 @@ app.post("/ai/decide", async (req, res) => {
       // Execute each tool and append the responses for the next turn.
       const responseParts = [];
       for (const call of calls) {
-        const toolResult = await executeMapsTool(call, user);
+        const toolResult = await executeMapsTool(call, userContext);
         if (toolResult?.error) {
           console.warn(`Tool ${call.name} returned error:`, toolResult.error);
         }

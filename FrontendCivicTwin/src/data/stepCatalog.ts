@@ -81,5 +81,6 @@ export function describeStep(stepId: string): StepMeta {
 export const BUILDING_TO_OFFICE_TYPE: Record<string, string> = {
   PoliceServices: "police_station",
   DigitalServicesHub: "kep",
+  KEP: "kep",
   None: "",
 };

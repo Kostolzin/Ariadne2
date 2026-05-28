@@ -155,6 +155,7 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
           message: trimmed,
           user: state.user,
           conversationState: state.conversationState,
+          userLocation: state.userLocation ?? undefined,
         });
 
         const ariadneMessage: ChatMessage = {
@@ -176,10 +177,11 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
           messages: [...prev.messages, ariadneMessage],
           conversationState: nextConversationState,
           lastDecision: decision,
+          nearestOffice: decision.mapResult ?? prev.nearestOffice,
           isThinking: false,
         }));
 
-        if (!decision.clarificationNeeded) {
+        if (!decision.clarificationNeeded && !decision.mapResult) {
           void fetchNearestForDecision(decision);
         }
       } catch (error) {
@@ -191,7 +193,7 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
         }));
       }
     },
-    [state.user, state.conversationState, fetchNearestForDecision],
+    [state.user, state.conversationState, state.userLocation, fetchNearestForDecision],
   );
 
   const emitEvent = useCallback(

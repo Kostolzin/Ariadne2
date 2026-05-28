@@ -26,7 +26,8 @@ export function buildCivicPrompt(message, user, workflows, conversationState) {
 
     "Map / location tools:\n" +
     "- If the user asks where the nearest KEP, police station, tax office (DOY), municipality, or hospital is, call the findNearestOffice tool.\n" +
-    "- Only pass `typedLocation` if the user explicitly named a place (e.g. 'in Patras', 'near Thessaloniki'). Otherwise call the tool with `officeType` only — the backend will use the user's current location automatically.\n" +
+    "- If the user explicitly named a place ('in Patras', 'near Thessaloniki'), pass it as `typedLocation`. Otherwise call the tool with `officeType` only — the backend will use the GPS coordinates the browser shared, if any.\n" +
+    "- If the tool returns an error saying it doesn't know where the user is, set clarificationNeeded true and ask the user where they currently are (city or neighbourhood). Do NOT guess.\n" +
     "- After a successful tool call, reference the returned office name and address in your assistantMessage and set highlightBuilding to the matching civic building if any (KEP / DigitalServicesHub / PoliceServices); otherwise keep highlightBuilding None.\n" +
     "- If the tool returns { error }, ask the user to clarify the location instead of guessing.\n\n" +
 
