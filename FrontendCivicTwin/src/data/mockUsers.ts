@@ -10,26 +10,6 @@ export const MOCK_USERS: MockUser[] = [
     email: "eleni@example.com",
     password: "ariadne123",
   },
-  {
-    username: "Yannis",
-    email: "yannis@example.com",
-    password: "labyrinth42",
-  },
-  {
-    username: "Maria",
-    email: "maria@example.com",
-    password: "athens2026",
-  },
-  {
-    username: "Kostas",
-    email: "kostas@example.com",
-    password: "piraeus2026",
-  },
-  {
-    username: "Sofia",
-    email: "sofia@example.com",
-    password: "thread999",
-  },
 ];
 
 export function findMockUser(
