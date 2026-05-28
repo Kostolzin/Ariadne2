@@ -35,12 +35,12 @@ export interface AiDecideResponse {
   workflowVariant: string;
   clarificationNeeded: boolean;
   clarificationQuestion: string;
-  highlightBuilding: string;
-  openPanel: string;
+  officeType: string;
   nextAction: string;
   acceptPendingAction: boolean;
   pendingActionDecision: string;
   relatedWorkflows: string[];
+  mapResult?: NearestOfficeResult;
 
   // Enriched by commandBuilder when no clarification is needed.
   citizenRecord?: CitizenRecord;
@@ -96,8 +96,7 @@ export interface EventResponse {
   amount?: string;
   paymentStatus?: string;
   nextAction: string;
-  highlightBuilding?: string;
-  openPanel?: string;
+  officeType?: string;
   currentStage?: string;
   nextRecommendedAction?: string;
 }

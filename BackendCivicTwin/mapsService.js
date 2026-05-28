@@ -27,7 +27,7 @@ const DIRECTIONS_URL =
 const DISTANCE_MATRIX_URL =
   "https://maps.googleapis.com/maps/api/distancematrix/json";
 
-// Maps the civic office types the AI / Unity layer uses to a concrete
+// Maps the civic office types the AI layer uses to a concrete
 // Places text query. Keep aliases here so callers stay declarative.
 const OFFICE_TYPE_QUERIES = {
   kep: "KEP citizen service center",
@@ -106,7 +106,7 @@ function isMockMode() {
   return process.env.MAPS_MOCK === "true";
 }
 
-// Hardcoded "current user location" — used when the client (Unity)
+// Hardcoded "current user location" used when the web client
 // didn't pass GPS coordinates and the model didn't extract a typed
 // location from the message. Lets the demo skip the geolocation /
 // geocoding step while still hitting the real Places API.

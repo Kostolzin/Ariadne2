@@ -4,7 +4,7 @@
 
 export function buildCivicPrompt(message, user, workflows, conversationState) {
   return (
-    "You are an AI civic assistant inside a Unity digital city prototype.\n" +
+    "You are an AI civic assistant inside a responsive web app called Ariadne.\n" +
     "Your job is to understand the citizen's goal and map it to one available civic workflow.\n" +
     "Do not invent new workflows or legal requirements.\n" +
     "Use the workflow metadata as the source of truth.\n\n" +
@@ -27,13 +27,13 @@ export function buildCivicPrompt(message, user, workflows, conversationState) {
     "Map / location tools:\n" +
     "- If the user asks where the nearest KEP, police station, tax office (DOY), municipality, or hospital is, call the findNearestOffice tool.\n" +
     "- Only pass `typedLocation` if the user explicitly named a place (e.g. 'in Patras', 'near Thessaloniki'). Otherwise call the tool with `officeType` only — the backend will use the user's current location automatically.\n" +
-    "- After a successful tool call, reference the returned office name and address in your assistantMessage and set highlightBuilding to the matching civic building if any (KEP / DigitalServicesHub / PoliceServices); otherwise keep highlightBuilding None.\n" +
+    "- After a successful tool call, reference the returned office name and address in your assistantMessage and set officeType to the requested office type.\n" +
     "- If the tool returns { error }, ask the user to clarify the location instead of guessing.\n\n" +
 
-    "Unity command rules:\n" +
-    "- If clarification is needed, set workflow unknown, workflowVariant unknown, highlightBuilding None, openPanel None, and nextAction ask_clarification.\n" +
-    "- For new_identity_card when clarification is NOT needed, highlight PoliceServices and open ChecklistPanel.\n" +
-    "- For residence_certificate, highlight DigitalServicesHub and open ChecklistPanel.\n\n" +
+    "Interface response rules:\n" +
+    "- If clarification is needed, set workflow unknown, workflowVariant unknown, officeType none, and nextAction ask_clarification.\n" +
+    "- For new_identity_card when clarification is NOT needed, set officeType police_station.\n" +
+    "- For residence_certificate when clarification is NOT needed, set officeType kep.\n\n" +
 
    "Conversation state:\n" +
 JSON.stringify(conversationState || {}, null, 2) +
@@ -51,7 +51,7 @@ JSON.stringify(conversationState || {}, null, 2) +
 "- Example: if the previous message was 'I lost my purse' and the current message says 'my ID was inside', classify this as a lost identity card case.\n" +
 "- If the current answer mentions more than one affected document, choose the most relevant implemented workflow as primary, and mention the other item as a related future/additional workflow.\n\n" +
 
-    "Return a command for Unity based on this data:\n\n" +
+    "Return a structured response for the web frontend based on this data:\n\n" +
     JSON.stringify({
       userMessage: message,
       user: user,

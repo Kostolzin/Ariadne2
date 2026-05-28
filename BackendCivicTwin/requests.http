@@ -9,7 +9,7 @@
 
 ############################################################
 # /ai/decide
-# Natural-language interpretation. Returns workflow + Unity command.
+# Natural-language interpretation. Returns workflow guidance.
 ############################################################
 
 ### Clear lost-ID request (English)

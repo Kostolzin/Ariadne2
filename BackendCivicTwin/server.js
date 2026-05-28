@@ -59,8 +59,7 @@ const civicResponseSchema = {
     workflowVariant: { type: Type.STRING },
     clarificationNeeded: { type: Type.BOOLEAN },
     clarificationQuestion: { type: Type.STRING },
-    highlightBuilding: { type: Type.STRING },
-    openPanel: { type: Type.STRING },
+    officeType: { type: Type.STRING },
     nextAction: { type: Type.STRING },
     acceptPendingAction: { type: Type.BOOLEAN },
     pendingActionDecision: { type: Type.STRING },
@@ -77,8 +76,7 @@ const civicResponseSchema = {
     "workflowVariant",
     "clarificationNeeded",
     "clarificationQuestion",
-    "highlightBuilding",
-    "openPanel",
+    "officeType",
     "nextAction",
     "relatedWorkflows",
     "acceptPendingAction",
@@ -91,9 +89,9 @@ const MAX_TOOL_ITERATIONS = 4;
 /// <summary>
 /// AI interpretation endpoint.
 ///
-/// Unity sends natural language here.
+/// The web frontend sends natural language here.
 /// AI interprets the civic intent — calling map tools when needed —
-/// and returns a structured Unity command (workflow, panel, etc.)
+/// and returns structured workflow guidance
 /// plus an optional mapResult.
 /// </summary>
 app.post("/ai/decide", async (req, res) => {
@@ -119,8 +117,8 @@ app.post("/ai/decide", async (req, res) => {
       },
     ];
 
-    // Latest successful map result, returned to Unity alongside the
-    // structured command so the client can drop a marker / open the map.
+    // Latest successful map result, returned alongside the structured
+    // response so the client can show the relevant location.
     let lastMapResult = null;
 
     // Phase 1: tools loop.
@@ -175,7 +173,7 @@ app.post("/ai/decide", async (req, res) => {
     // Phase 2: structured-output call.
     //
     // Tools are removed; the schema is enforced. The model now has all
-    // tool results in `contents` and emits the final Unity command.
+    // tool results in `contents` and emits the final frontend response.
     const finalResponse = await generateContentWithRetry({
       model: "gemini-2.5-flash",
       contents,

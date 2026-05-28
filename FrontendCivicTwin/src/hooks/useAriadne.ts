@@ -13,7 +13,6 @@ import type {
   NearestOfficeResult,
   User,
 } from "../types/api";
-import { BUILDING_TO_OFFICE_TYPE } from "../data/stepCatalog";
 
 export interface ChatMessage {
   id: string;
@@ -32,6 +31,13 @@ interface AriadneState {
   isLocating: boolean;
   selectedAppointment: string | null;
   reservedAppointment: string | null;
+  appointmentStatus: "not_booked" | "reserved" | "confirmed";
+  activeServicePanel: "checklist" | "appointment" | "e_paravolo" | null;
+  eParavoloPayment: {
+    paymentCode: string;
+    amount: string;
+    paymentStatus: string;
+  } | null;
   pendingError: string | null;
   isThinking: boolean;
 }
@@ -61,6 +67,9 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
     isLocating: false,
     selectedAppointment: null,
     reservedAppointment: null,
+    appointmentStatus: "not_booked",
+    activeServicePanel: null,
+    eParavoloPayment: null,
     pendingError: null,
     isThinking: false,
   }));
@@ -70,8 +79,11 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
       decision: AiDecideResponse,
       userLocation: UserLocation | null,
     ): Promise<NearestOfficeResult | null> => {
-      const officeType = BUILDING_TO_OFFICE_TYPE[decision.highlightBuilding];
+      if (decision.mapResult) return decision.mapResult;
+
+      const officeType = decision.officeType;
       if (!officeType) return null;
+      if (officeType === "none") return null;
 
       const typedLocation = municipalityToLocation(
         decision.citizenRecord?.municipality,
@@ -221,17 +233,37 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
                 missingSteps: response.civicState.missingSteps,
               }
             : {};
+
+          const shouldOpenEParavolo =
+            response.nextAction === "go_to_e_paravolo" ||
+            response.nextRecommendedAction === "go_to_e_paravolo" ||
+            response.completedStep === "e_paravolo";
+
+          const eParavoloPayment =
+            response.completedStep === "e_paravolo"
+              ? {
+                  paymentCode: response.paymentCode ?? "",
+                  amount: response.amount ?? "",
+                  paymentStatus: response.paymentStatus ?? "",
+                }
+              : prev.eParavoloPayment;
+
           return {
             ...prev,
             messages: [...prev.messages, ariadneMessage],
             lastDecision: prev.lastDecision
               ? ({ ...prev.lastDecision, ...merged } as AiDecideResponse)
               : prev.lastDecision,
+            appointmentStatus: response.civicState.appointmentStatus,
             reservedAppointment:
               response.civicState.appointmentStatus === "reserved" ||
               response.civicState.appointmentStatus === "confirmed"
                 ? response.civicState.selectedAppointment
                 : prev.reservedAppointment,
+            activeServicePanel: shouldOpenEParavolo
+              ? "e_paravolo"
+              : prev.activeServicePanel,
+            eParavoloPayment,
           };
         });
       } catch (error) {
@@ -257,11 +289,16 @@ export function useAriadne(initialUser: User = { name: "Eleni" }) {
     void emitEvent("appointment_confirmed", {});
   }, [emitEvent]);
 
+  const issueEParavolo = useCallback(() => {
+    void emitEvent("e_paravolo_issued", {});
+  }, [emitEvent]);
+
   return {
     state,
     sendMessage,
     selectAppointment,
     confirmAppointment,
+    issueEParavolo,
     emitEvent,
     shareLocation,
   };

@@ -12,8 +12,16 @@ interface ItineraryColumnProps {
   userLocation: UserLocation | null;
   selectedAppointment: string | null;
   reservedAppointment: string | null;
+  appointmentStatus: "not_booked" | "reserved" | "confirmed";
+  activeServicePanel: "checklist" | "appointment" | "e_paravolo" | null;
+  eParavoloPayment: {
+    paymentCode: string;
+    amount: string;
+    paymentStatus: string;
+  } | null;
   isLocating: boolean;
   locationError: string | null;
+  onIssueEParavolo: () => void;
   onSelectAppointment: (slot: string) => void;
   onConfirmAppointment: () => void;
   onShareLocation: () => void;
@@ -26,8 +34,12 @@ export function ItineraryColumn({
   userLocation,
   selectedAppointment,
   reservedAppointment,
+  appointmentStatus,
+  activeServicePanel,
+  eParavoloPayment,
   isLocating,
   locationError,
+  onIssueEParavolo,
   onSelectAppointment,
   onConfirmAppointment,
   onShareLocation,
@@ -35,6 +47,10 @@ export function ItineraryColumn({
   const requiredSteps = decision?.requiredSteps ?? [];
   const completed = new Set(decision?.completedSteps ?? []);
   const appointments = decision?.availableAppointments ?? [];
+  const shouldShowEParavolo =
+    requiredSteps.includes("e_paravolo") && !completed.has("e_paravolo");
+  const shouldOpenEParavolo =
+    activeServicePanel === "e_paravolo" || completed.has("appointment");
 
   return (
     <section
@@ -66,14 +82,109 @@ export function ItineraryColumn({
         <Documents steps={requiredSteps} completed={completed} />
       )}
 
+      {(shouldShowEParavolo || eParavoloPayment) && shouldOpenEParavolo && (
+        <EParavoloCard
+          payment={eParavoloPayment}
+          onIssue={onIssueEParavolo}
+        />
+      )}
+
       <AppointmentCard
         appointments={appointments}
         selected={selectedAppointment}
         reserved={reservedAppointment}
+        status={appointmentStatus}
         onSelect={onSelectAppointment}
         onConfirm={onConfirmAppointment}
       />
     </section>
+  );
+}
+
+interface EParavoloCardProps {
+  payment: {
+    paymentCode: string;
+    amount: string;
+    paymentStatus: string;
+  } | null;
+  onIssue: () => void;
+}
+
+function EParavoloCard({ payment, onIssue }: EParavoloCardProps) {
+  const hasPayment = Boolean(payment?.paymentCode);
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid rgba(31,93,74,0.2)",
+        borderRadius: 14,
+        padding: 16,
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+      }}
+    >
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 10,
+          background: "#eef4ed",
+          color: "#1f5d4a",
+          display: "grid",
+          placeItems: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Icon name="doc" size={20} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <SectionLabel small>e-Paravolo payment</SectionLabel>
+        {hasPayment ? (
+          <div style={{ fontSize: 12.5, color: "#46505c", marginTop: 6, lineHeight: 1.45 }}>
+            <strong>Payment code:</strong> {payment?.paymentCode}
+            <br />
+            <strong>Amount:</strong> {payment?.amount}
+            <br />
+            <strong>Status:</strong> {payment?.paymentStatus}
+          </div>
+        ) : (
+          <div style={{ fontSize: 12.5, color: "#6a6f78", marginTop: 6 }}>
+            Generate the payment reference for the ID card fee.
+          </div>
+        )}
+      </div>
+      {hasPayment ? (
+        <div
+          style={{
+            color: "#1f5d4a",
+            fontSize: 12.5,
+            fontWeight: 700,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Generated
+        </div>
+      ) : (
+        <button
+          onClick={onIssue}
+          style={{
+            background: "#1f5d4a",
+            color: "#fbf7ee",
+            border: "none",
+            borderRadius: 8,
+            padding: "9px 13px",
+            fontSize: 12.5,
+            fontWeight: 700,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Generate
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -213,6 +324,7 @@ interface AppointmentCardProps {
   appointments: string[];
   selected: string | null;
   reserved: string | null;
+  status: "not_booked" | "reserved" | "confirmed";
   onSelect: (slot: string) => void;
   onConfirm: () => void;
 }
@@ -221,12 +333,15 @@ function AppointmentCard({
   appointments,
   selected,
   reserved,
+  status,
   onSelect,
   onConfirm,
 }: AppointmentCardProps) {
   if (appointments.length === 0 && !reserved) return null;
 
   if (reserved) {
+    const confirmed = status === "confirmed";
+
     return (
       <div
         style={{
@@ -262,27 +377,33 @@ function AppointmentCard({
               fontWeight: 600,
             }}
           >
-            Appointment reserved
+            {confirmed ? "Appointment confirmed" : "Appointment reserved"}
           </div>
           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, marginTop: 2 }}>
             {reserved}
           </div>
-          <button
-            onClick={onConfirm}
-            style={{
-              marginTop: 8,
-              background: "#fbf7ee",
-              color: "#1f5d4a",
-              border: "none",
-              borderRadius: 8,
-              padding: "8px 14px",
-              fontSize: 12.5,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Confirm booking
-          </button>
+          {confirmed ? (
+            <div style={{ marginTop: 6, fontSize: 12.5, opacity: 0.82 }}>
+              Next: generate the e-Paravolo payment reference.
+            </div>
+          ) : (
+            <button
+              onClick={onConfirm}
+              style={{
+                marginTop: 8,
+                background: "#fbf7ee",
+                color: "#1f5d4a",
+                border: "none",
+                borderRadius: 8,
+                padding: "8px 14px",
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Confirm booking
+            </button>
+          )}
         </div>
       </div>
     );

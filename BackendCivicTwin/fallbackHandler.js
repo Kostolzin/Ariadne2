@@ -1,5 +1,5 @@
 // fallbackHandler.js
-// Keeps the Unity demo alive if Gemini is overloaded,
+// Keeps the app responsive if Gemini is overloaded,
 // rate-limited, or temporarily unavailable.
 
 export function handleAIError(error, res) {
@@ -20,8 +20,7 @@ export function handleAIError(error, res) {
       workflowVariant: "lost",
       clarificationNeeded: false,
       clarificationQuestion: "",
-      highlightBuilding: "PoliceServices",
-      openPanel: "ChecklistPanel",
+      officeType: "police_station",
       nextAction: "start_lost_id_workflow",
 
       requiredSteps: ["photo", "e_paravolo", "appointment", "loss_declaration"],
@@ -37,8 +36,7 @@ export function handleAIError(error, res) {
     workflowVariant: "unknown",
     clarificationNeeded: false,
     clarificationQuestion: "",
-    highlightBuilding: "None",
-    openPanel: "None",
+    officeType: "none",
     nextAction: "error",
   });
 }

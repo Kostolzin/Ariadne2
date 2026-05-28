@@ -6,7 +6,7 @@ export const workflows = {
   new_identity_card: {
     title: "New Identity Card",
     serviceType: "hybrid",
-    mainBuilding: "PoliceServices",
+    officeType: "police_station",
     description:
       "Preparation for issuing a new Greek identity card. Some steps are digital, but physical presence at the police authority is required.",
     steps: [
@@ -40,7 +40,7 @@ export const workflows = {
   residence_certificate: {
     title: "Permanent Residence Certificate",
     serviceType: "digital_municipal",
-    mainBuilding: "DigitalServicesHub",
+    officeType: "kep",
     description:
       "Request for a permanent residence certificate through digital government services and the competent municipality.",
     steps: [

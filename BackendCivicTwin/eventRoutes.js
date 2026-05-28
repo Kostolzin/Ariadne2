@@ -1,6 +1,5 @@
-// Handles backend workflow events sent by Unity.
+// Handles backend workflow events sent by the web frontend.
 //
-// Unity no longer owns procedural truth.
 // Backend owns workflow progression/state.
 
 import express from "express";
@@ -46,8 +45,7 @@ eventRouter.post("/", async (req, res) => {
 
         nextAction: "confirm_appointment",
 
-        highlightBuilding: "PoliceServices",
-        openPanel: "AppointmentPanel",
+        officeType: "police_station",
 
         currentStage: state.currentStage,
 
@@ -75,8 +73,7 @@ eventRouter.post("/", async (req, res) => {
 
         nextAction: "go_to_e_paravolo",
 
-        highlightBuilding: "DigitalServicesHub",
-        openPanel: "ChecklistPanel",
+        officeType: "kep",
 
         currentStage: state.currentStage,
 
@@ -92,52 +89,48 @@ eventRouter.post("/", async (req, res) => {
 
       let nextAction = "refresh_checklist";
       let assistantMessage = "Your e-Paravolo has been generated successfully.";
-      let highlightBuilding = "None";
-    let openPanel = "ChecklistPanel";
-    let nextRecommendedAction = "ready_for_physical_visit";
+      let officeType = "none";
+      let nextRecommendedAction = "ready_for_physical_visit";
 
-    if (state.pendingWorkflows && state.pendingWorkflows.length > 0) {
-  assistantMessage =
-    "Your e-Paravolo has been generated successfully. " +
-    "You also mentioned another civic need. Would you like to continue with the residence certificate workflow?";
+      if (state.pendingWorkflows && state.pendingWorkflows.length > 0) {
+        assistantMessage =
+          "Your e-Paravolo has been generated successfully. " +
+          "You also mentioned another civic need. Would you like to continue with the residence certificate workflow?";
 
-  nextAction = "offer_pending_workflow";
-  highlightBuilding = "DigitalServicesHub";
-  openPanel = "ChecklistPanel";
-  nextRecommendedAction = "continue_pending_workflow";
-}
+        nextAction = "offer_pending_workflow";
+        officeType = "kep";
+        nextRecommendedAction = "continue_pending_workflow";
+      }
 
       // Generate fake payment reference.
       const paymentCode =
         "RF4485-" + Math.floor(Math.random() * 1000000);
 
-        state = syncActiveWorkflowSteps(state);
+      state = syncActiveWorkflowSteps(state);
 
       return res.json({
-  success: true,
+        success: true,
 
-  assistantMessage: assistantMessage,
+        assistantMessage: assistantMessage,
 
-  civicState: state,
+        civicState: state,
 
-  completedStep: "e_paravolo",
+        completedStep: "e_paravolo",
 
-  paymentCode: paymentCode,
+        paymentCode: paymentCode,
 
-  amount: "10.00 EUR",
+        amount: "10.00 EUR",
 
-  paymentStatus: "pending_payment",
+        paymentStatus: "pending_payment",
 
-  nextAction: nextAction,
+        nextAction: nextAction,
 
-  highlightBuilding: highlightBuilding,
+        officeType: officeType,
 
-  openPanel: openPanel,
+        currentStage: state.currentStage,
 
-  currentStage: state.currentStage,
-
-  nextRecommendedAction: nextRecommendedAction,
-});
+        nextRecommendedAction: nextRecommendedAction,
+      });
     }
 
     /// --------------------------------------------------------
@@ -159,8 +152,7 @@ eventRouter.post("/", async (req, res) => {
 
         nextAction: "refresh_checklist",
 
-        highlightBuilding: "None",
-        openPanel: "ChecklistPanel",
+        officeType: "none",
 
         currentStage: state.currentStage,
 
@@ -168,7 +160,7 @@ eventRouter.post("/", async (req, res) => {
       });
     }
 
-        /// --------------------------------------------------------
+    /// --------------------------------------------------------
     /// TAXISNET AUTHENTICATED
     /// --------------------------------------------------------
     if (eventType === "taxisnet_authenticated") {
@@ -190,8 +182,7 @@ eventRouter.post("/", async (req, res) => {
 
         nextAction: "upload_residence_proof",
 
-        highlightBuilding: "DigitalServicesHub",
-        openPanel: "ResidenceCertificatePanel",
+        officeType: "kep",
 
         currentStage: state.currentStage,
 
@@ -221,8 +212,7 @@ eventRouter.post("/", async (req, res) => {
 
         nextAction: "request_residence_certificate",
 
-        highlightBuilding: "DigitalServicesHub",
-        openPanel: "ResidenceCertificatePanel",
+        officeType: "kep",
 
         currentStage: state.currentStage,
 
@@ -252,8 +242,7 @@ eventRouter.post("/", async (req, res) => {
 
         nextAction: "wait_for_certificate",
 
-        highlightBuilding: "DigitalServicesHub",
-        openPanel: "ResidenceCertificatePanel",
+        officeType: "kep",
 
         currentStage: state.currentStage,
 
@@ -283,8 +272,7 @@ eventRouter.post("/", async (req, res) => {
 
         nextAction: "workflow_complete",
 
-        highlightBuilding: "None",
-        openPanel: "ChecklistPanel",
+        officeType: "none",
 
         currentStage: state.currentStage,
 
@@ -293,30 +281,29 @@ eventRouter.post("/", async (req, res) => {
     }
 
     /// --------------------------------------------------------
-/// CONTINUE PENDING WORKFLOW
-/// --------------------------------------------------------
-if (eventType === "continue_pending_workflow") {
-  state = startNextPendingWorkflow(user);
-  state = syncActiveWorkflowSteps(state);
+    /// CONTINUE PENDING WORKFLOW
+    /// --------------------------------------------------------
+    if (eventType === "continue_pending_workflow") {
+      state = startNextPendingWorkflow(user);
+      state = syncActiveWorkflowSteps(state);
 
-  return res.json({
-    success: true,
+      return res.json({
+        success: true,
 
-    assistantMessage:
-      "Great. I will now continue with the next related workflow.",
+        assistantMessage:
+          "Great. I will now continue with the next related workflow.",
 
-    civicState: state,
+        civicState: state,
 
-    nextAction: "start_pending_workflow",
+        nextAction: "start_pending_workflow",
 
-    highlightBuilding: "DigitalServicesHub",
-    openPanel: "ResidenceCertificatePanel",
+        officeType: "kep",
 
-    currentStage: state.currentStage,
+        currentStage: state.currentStage,
 
-    nextRecommendedAction: "authenticate_with_taxisnet",
-  });
-}
+        nextRecommendedAction: "authenticate_with_taxisnet",
+      });
+    }
 
     /// --------------------------------------------------------
     /// UNKNOWN EVENT

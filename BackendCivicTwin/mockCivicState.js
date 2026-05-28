@@ -153,6 +153,11 @@ export function confirmAppointment(user) {
 
   state.appointmentStatus = "confirmed";
 
+  if (!state.activeWorkflow) {
+    state.activeWorkflow = "new_identity_card";
+    state.activeVariant = state.activeVariant || "standard";
+  }
+
   const workflowId = state.activeWorkflow;
 
   if (
@@ -184,6 +189,14 @@ export function confirmAppointment(user) {
 export function completeStep(user, stepId) {
   const state = getCivicState(user);
 
+  if (
+    !state.activeWorkflow &&
+    ["appointment", "e_paravolo", "loss_declaration", "theft_report"].includes(stepId)
+  ) {
+    state.activeWorkflow = "new_identity_card";
+    state.activeVariant = state.activeVariant || "standard";
+  }
+
   const workflowId = state.activeWorkflow;
 
   // Fallback if workflow missing.
@@ -197,6 +210,10 @@ export function completeStep(user, stepId) {
   if (!workflowState.completedSteps.includes(stepId)) {
     workflowState.completedSteps.push(stepId);
   }
+
+  workflowState.missingSteps = (workflowState.missingSteps || []).filter(
+    (missingStep) => missingStep !== stepId
+  );
 
   // Store as available document globally if relevant.
   if (!state.documents.includes(stepId)) {

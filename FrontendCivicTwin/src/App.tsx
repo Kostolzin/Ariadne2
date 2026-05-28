@@ -140,8 +140,12 @@ function AuthedApp({ mobile, username, onSignOut }: AuthedAppProps) {
           userLocation={ariadne.state.userLocation}
           selectedAppointment={ariadne.state.selectedAppointment}
           reservedAppointment={ariadne.state.reservedAppointment}
+          appointmentStatus={ariadne.state.appointmentStatus}
+          activeServicePanel={ariadne.state.activeServicePanel}
+          eParavoloPayment={ariadne.state.eParavoloPayment}
           isLocating={ariadne.state.isLocating}
           locationError={ariadne.state.locationError}
+          onIssueEParavolo={ariadne.issueEParavolo}
           onSelectAppointment={ariadne.selectAppointment}
           onConfirmAppointment={ariadne.confirmAppointment}
           onShareLocation={ariadne.shareLocation}

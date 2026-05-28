@@ -1,7 +1,7 @@
 // mapsRoutes.js
 // Express routes for Google Maps lookups.
 //
-// Unity (or the AI orchestrator) calls these instead of talking to
+// The web frontend calls these instead of talking to
 // Google directly, so the API key stays on the backend.
 
 import express from "express";
