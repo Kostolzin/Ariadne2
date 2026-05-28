@@ -13,6 +13,45 @@ interface ChatColumnProps {
   onSend: (message: string) => void;
 }
 
+const THINKING_WORDS = ["Thinking", "Processing", "Reasoning", "Searching", "Consulting the archive"];
+
+function ThinkingIndicator() {
+  const [wordIndex, setWordIndex] = useState(0);
+  const [dotCount, setDotCount] = useState(1);
+
+  useEffect(() => {
+    const wordTimer = setInterval(() => {
+      setWordIndex((i) => (i + 1) % THINKING_WORDS.length);
+    }, 1600);
+    const dotTimer = setInterval(() => {
+      setDotCount((d) => (d % 3) + 1);
+    }, 400);
+    return () => {
+      clearInterval(wordTimer);
+      clearInterval(dotTimer);
+    };
+  }, []);
+
+  return (
+    <span
+      style={{
+        fontStyle: "italic",
+        color: "#1f5d4a",
+        opacity: 0.85,
+        display: "inline-flex",
+        alignItems: "baseline",
+        gap: 2,
+      }}
+      aria-live="polite"
+    >
+      <span>{THINKING_WORDS[wordIndex]}</span>
+      <span style={{ display: "inline-block", minWidth: "1.4em", textAlign: "left" }}>
+        {".".repeat(dotCount)}
+      </span>
+    </span>
+  );
+}
+
 export function ChatColumn({
   mobile,
   caseTitle,
@@ -93,7 +132,11 @@ export function ChatColumn({
             <UserBubble key={m.id}>{m.text}</UserBubble>
           ),
         )}
-        {isThinking && <AriadneBubble>…</AriadneBubble>}
+        {isThinking && (
+          <AriadneBubble>
+            <ThinkingIndicator />
+          </AriadneBubble>
+        )}
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
