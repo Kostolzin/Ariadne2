@@ -76,3 +76,11 @@ export function describeStep(stepId: string): StepMeta {
   );
 }
 
+// Maps the abstract building name the AI returns to a Places-search officeType
+// understood by /api/maps/nearest (see CivicTwinBackend/mapsService.js).
+export const BUILDING_TO_OFFICE_TYPE: Record<string, string> = {
+  PoliceServices: "police_station",
+  DigitalServicesHub: "kep",
+  KEP: "kep",
+  None: "",
+};

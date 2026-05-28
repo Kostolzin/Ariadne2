@@ -27,6 +27,7 @@ export interface AiDecideRequest {
   message: string;
   user: User;
   conversationState: ConversationState;
+  userLocation?: { lat: number; lng: number };
 }
 
 export interface AiDecideResponse {
@@ -48,6 +49,9 @@ export interface AiDecideResponse {
   completedSteps?: string[];
   missingSteps?: string[];
   availableAppointments?: string[];
+
+  // Set when the AI invoked findNearestOffice as a tool during this turn.
+  mapResult?: NearestOfficeResult;
 }
 
 export interface WorkflowState {

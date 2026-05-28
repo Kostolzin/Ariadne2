@@ -69,9 +69,18 @@ export async function executeMapsTool(call, user) {
 
   try {
     if (call.name === "findNearestOffice") {
+      const typedLocation = args.typedLocation ?? user?.typedLocation;
+      // Refuse to silently fall back to a server-side default — if we have
+      // no idea where the user is, the model should ask them.
+      if (!user?.location && !typedLocation) {
+        return {
+          error:
+            "I don't know where you are right now. Please share your location or tell me which city or neighbourhood you're in.",
+        };
+      }
       const result = await findNearestOffice({
         officeType: args.officeType,
-        typedLocation: args.typedLocation ?? user?.typedLocation,
+        typedLocation,
         location: user?.location,
       });
       return result ?? { error: "No matching office was found." };
