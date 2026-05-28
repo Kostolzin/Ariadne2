@@ -1,0 +1,329 @@
+### CivicTwin backend - development / debugging requests
+### Use with the VS Code "REST Client" extension (humao.rest-client).
+### Click "Send Request" above each block.
+
+@host = http://localhost:3000
+@userEleni = { "name": "Eleni" }
+@userNikos = { "name": "Nikos" }
+
+
+############################################################
+# /ai/decide
+# Natural-language interpretation. Returns workflow + Unity command.
+############################################################
+
+### Clear lost-ID request (English)
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "I lost my ID card yesterday, what do I do?",
+  "user": {{userEleni}},
+  "conversationState": {}
+}
+
+
+### Clear lost-ID request (Greek)
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "Έχασα την ταυτότητά μου, τι πρέπει να κάνω;",
+  "user": {{userEleni}},
+  "conversationState": {}
+}
+
+
+### Ambiguous: should trigger clarificationNeeded
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "I lost my wallet",
+  "user": {{userEleni}},
+  "conversationState": {}
+}
+
+
+### Follow-up to the ambiguous wallet case
+### Use this after the previous request — it simulates the user answering the clarification.
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "My ID was inside",
+  "user": {{userEleni}},
+  "conversationState": {
+    "waitingForClarification": true,
+    "lastUserMessage": "I lost my wallet",
+    "lastAssistantQuestion": "Which documents or certificates were inside or affected?"
+  }
+}
+
+
+### Multi-need: ID + residence certificate (primary + relatedWorkflows)
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "I need a new ID and also a residence certificate",
+  "user": {{userEleni}},
+  "conversationState": {}
+}
+
+
+### ID variant clarification: should ask first_time / renewal / lost / stolen
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "I want to deal with my identity card",
+  "user": {{userNikos}},
+  "conversationState": {}
+}
+
+
+### Residence certificate, direct request
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "I need a permanent residence certificate",
+  "user": {{userEleni}},
+  "conversationState": {}
+}
+
+
+### Pending-action handling: user accepts a pending backend action
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "Yes please continue",
+  "user": {{userEleni}},
+  "conversationState": {
+    "pendingBackendAction": "continue_pending_workflow"
+  }
+}
+
+
+### Pending-action handling: user declines
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "Not right now",
+  "user": {{userEleni}},
+  "conversationState": {
+    "pendingBackendAction": "continue_pending_workflow"
+  }
+}
+
+
+### Out-of-scope request (should set workflow unknown)
+POST {{host}}/ai/decide
+Content-Type: application/json
+
+{
+  "message": "Can you book me a flight to Berlin?",
+  "user": {{userEleni}},
+  "conversationState": {}
+}
+
+
+############################################################
+# /api/event - new_identity_card happy path
+# Run these in order against the same user to walk the state machine.
+############################################################
+
+### 1) User picks an appointment slot
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "appointment_slot_selected",
+  "user": {{userEleni}},
+  "payload": { "selectedAppointment": "Monday 10:30" }
+}
+
+
+### 2) User confirms the reserved appointment
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "appointment_confirmed",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+### 3) e-Paravolo issued (returns fake RF4485-... payment code)
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "e_paravolo_issued",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+### Generic document upload (use payload.stepId to target a step)
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "document_uploaded",
+  "user": {{userEleni}},
+  "payload": { "stepId": "loss_declaration" }
+}
+
+
+############################################################
+# /api/event - residence_certificate flow
+############################################################
+
+### Taxisnet authentication (auto-switches activeWorkflow to residence_certificate)
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "taxisnet_authenticated",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+### Proof of residence uploaded
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "residence_proof_uploaded",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+### Citizen submits the certificate request to the municipality
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "residence_certificate_requested",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+### Municipality issues the certificate to gov.gr inbox
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "residence_certificate_issued",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+### Continue with the next queued (pending) workflow
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "continue_pending_workflow",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+### Unknown event type (expect 400)
+POST {{host}}/api/event
+Content-Type: application/json
+
+{
+  "eventType": "not_a_real_event",
+  "user": {{userEleni}},
+  "payload": {}
+}
+
+
+############################################################
+# /api/maps - Google Maps lookups
+############################################################
+
+### Nearest KEP by typed location (free-text, geocoded server-side)
+POST {{host}}/api/maps/nearest
+Content-Type: application/json
+
+{
+  "officeType": "kep",
+  "typedLocation": "Syntagma Square, Athens"
+}
+
+
+### Nearest police station by GPS coordinates
+POST {{host}}/api/maps/nearest
+Content-Type: application/json
+
+{
+  "officeType": "police_station",
+  "location": { "lat": 37.9838, "lng": 23.7275 }
+}
+
+
+### Nearest tax office (DOY) — Greek alias
+POST {{host}}/api/maps/nearest
+Content-Type: application/json
+
+{
+  "officeType": "doy",
+  "typedLocation": "Piraeus"
+}
+
+
+### Nearest municipality
+POST {{host}}/api/maps/nearest
+Content-Type: application/json
+
+{
+  "officeType": "municipality",
+  "typedLocation": "Thessaloniki"
+}
+
+
+### Custom phrase fallthrough (anything not in the alias table is used as-is)
+POST {{host}}/api/maps/nearest
+Content-Type: application/json
+
+{
+  "officeType": "nearest 24h pharmacy",
+  "typedLocation": "Athens Center"
+}
+
+
+### Missing officeType (expect 400)
+POST {{host}}/api/maps/nearest
+Content-Type: application/json
+
+{
+  "typedLocation": "Athens"
+}
+
+
+### Geocode a free-text address
+POST {{host}}/api/maps/geocode
+Content-Type: application/json
+
+{
+  "address": "Patras"
+}
+
+
+### Geocode: missing address (expect 400)
+POST {{host}}/api/maps/geocode
+Content-Type: application/json
+
+{}
